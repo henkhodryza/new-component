@@ -59,12 +59,18 @@ const templatePath = `./templates/${program.type}.js`;
 // Get all of our file paths worked out, for the user's project.
 const componentDir = `${program.dir}/${componentName}`;
 const filePath = `${componentDir}/${componentName}.${program.extension}`;
-const indexPath = `${componentDir}/index.js`;
+const packagePath = `${componentDir}/package.json`;
+const stylePath = `${componentDir}/style.js`;
+
 
 // Our index template is super straightforward, so we'll just inline it for now.
-const indexTemplate = prettify(`\
-export { default } from './${componentName}';
-`);
+const packageTemplate = `{"main":"${componentName}.js"}`
+
+//Our style template is supper straightforward, so we'll just inline it for now
+const styledTemplate = prettify(`\
+import styled from 'styled-components'
+export default styled.div\` \`\
+`)
 
 logIntro({ name: componentName, dir: componentDir, type: program.type });
 
@@ -101,10 +107,10 @@ mkDirPromise(componentDir)
     logItemCompletion('Directory created.');
     return template;
   })
-  .then((template) =>
+  .then((template) => {
     // Replace our placeholders with real data (so far, just the component name)
     template.replace(/COMPONENT_NAME/g, componentName)
-  )
+  })
   .then((template) =>
     // Format it using prettier, to ensure style consistency, and write to file.
     writeFilePromise(filePath, prettify(template))
@@ -115,14 +121,22 @@ mkDirPromise(componentDir)
   })
   .then((template) =>
     // We also need the `index.js` file, which allows easy importing.
-    writeFilePromise(indexPath, prettify(indexTemplate))
+    writeFilePromise(packagePath, prettify(packageTemplate))
   )
   .then((template) => {
     logItemCompletion('Index file built and saved to disk.');
     return template;
   })
   .then((template) => {
-    logConclusion();
+    //We also need the `style.js` file, which allow to use styled-components 
+    writeFilePromise(stylePath, prettify(styledTemplate))
+  }).then(template => {
+    logItemCompletion('Styled file built and saved to disk')
+    return template
+  })
+  .then(template => {
+    //try add git add . and commit here
+    return template
   })
   .catch((err) => {
     console.error(err);
